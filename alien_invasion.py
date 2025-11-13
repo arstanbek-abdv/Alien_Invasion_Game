@@ -24,7 +24,6 @@ class AlienInvasion:
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_width = self.screen.get_rect().height
         '''
-
         pygame.display.set_caption('Alien Invasion')
 
         self.ship = Ship(self)
@@ -64,6 +63,10 @@ class AlienInvasion:
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
+        
+        # Check for any bullets that have hit aliens.
+        # If so, get rid of the bullet and the alien.
+        collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
 
 
     def _fire_bullet (self):
@@ -74,15 +77,29 @@ class AlienInvasion:
     def _create_fleet (self):
         alien = SmallAlien (self)
         self.aliens.add(alien)
-        alien_width = alien.rect.width
 
-        current_x = alien_width
-        while current_x < (self.settings.screen_width - 2 * alien_width):
-            new_alien = SmallAlien(self)
-            new_alien.x = current_x
-            new_alien.rect.x = current_x
-            self.aliens.add(new_alien)
-            current_x += 2 * alien_width
+        # Create an alien and keep adding aliens until ther's no room left.
+        # Spacing between aliens is one alien width and one alien height.
+
+        alien_width, alien_height = alien.rect.size
+        current_x, current_y = alien_width, alien_height
+        while current_y < (self.settings.screen_height - 3*alien_height):
+            while current_x < (self.settings.screen_width - 2 * alien_width): # We'll be keep adding aliens until there's space left only for two aliens on x-axis
+                self._create_alien(current_x,current_y)
+                current_x += 2 * alien_width # I suppose the first alien width is for spacing and the second one for is alien that will be drawn
+            current_x = alien_width
+            current_y += 2 * alien_height
+        
+    def _create_alien (self,x_position, y_position):
+        new_alien = SmallAlien(self) # We create a new alien
+        new_alien.x = x_position # We assign the position of a new alien to current_x 
+        new_alien.rect.x =  x_position # We assign the size of a new alien current_x
+        new_alien.rect.y = y_position
+        self.aliens.add(new_alien) # We add new alien to fleet
+    
+    
+    def _update_aliens (self):
+        self.aliens.update()
 
     def _update_screen(self):
         self.screen.blit(self.full_background, (0,0))
@@ -94,6 +111,7 @@ class AlienInvasion:
         while True:
             self._check_events()
             self.ship.update()
+            self._update_aliens()
             self._update_screen()
             self._update_bullets()
             self.aliens.draw(self.screen)
