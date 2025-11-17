@@ -40,7 +40,6 @@ class AlienInvasion:
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)  
 
-
     def _check_keydown_events (self,event):
         if event.key == pygame.K_RIGHT:
             self.ship.moving_right = True
@@ -74,29 +73,31 @@ class AlienInvasion:
             new_bullet = Bullet(self)
             self.bullets.add(new_bullet)
     
-    def _create_fleet (self):
-        alien = SmallAlien (self)
+    def _create_alien (self, x_position, y_position):
+        alien = SmallAlien(self)
+        alien.x = x_position
+        alien.rect.x = x_position
+        alien.rect.y = y_position
         self.aliens.add(alien)
-
-        # Create an alien and keep adding aliens until ther's no room left.
-        # Spacing between aliens is one alien width and one alien height.
-
-        alien_width, alien_height = alien.rect.size
-        current_x, current_y = alien_width, alien_height
-        while current_y < (self.settings.screen_height - 3*alien_height):
-            while current_x < (self.settings.screen_width - 2 * alien_width): # We'll be keep adding aliens until there's space left only for two aliens on x-axis
-                self._create_alien(current_x,current_y)
-                current_x += 2 * alien_width # I suppose the first alien width is for spacing and the second one for is alien that will be drawn
+   
+    def _create_fleet (self):
+        new_alien = SmallAlien(self)
+        alien_width = new_alien.rect.width
+        current_x = alien_width
+        alien_height = new_alien.rect.height
+        current_y = alien_height
+        while current_y < self.settings.screen_height - 3 * alien_height:
+            while current_x < (self.settings.screen_width - 2 * alien_width):
+                self._create_alien(current_x, current_y)
+                current_x += 3 *alien_width
             current_x = alien_width
-            current_y += 2 * alien_height
-        
-    def _create_alien (self,x_position, y_position):
-        new_alien = SmallAlien(self) # We create a new alien
-        new_alien.x = x_position # We assign the position of a new alien to current_x 
-        new_alien.rect.x =  x_position # We assign the size of a new alien current_x
-        new_alien.rect.y = y_position
-        self.aliens.add(new_alien) # We add new alien to fleet
-    
+            current_y += 4 * alien_height
+   
+
+    def _change_fleet_direction(self):
+        for alien in self.aliens.sprites():
+            alien.rect.y += self.settings.fleet_drop_speed
+        self.settings.fleet_direction *= -1
     
     def _update_aliens (self):
         self.aliens.update()
@@ -111,6 +112,7 @@ class AlienInvasion:
         while True:
             self._check_events()
             self.ship.update()
+            self._change_fleet_direction()
             self._update_aliens()
             self._update_screen()
             self._update_bullets()
